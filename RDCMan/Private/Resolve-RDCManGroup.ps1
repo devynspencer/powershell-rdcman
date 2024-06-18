@@ -12,6 +12,21 @@ function Resolve-RDCManGroup {
         Name = $Group.properties.name
     }
 
+
+    # If the group contains server entries, process them
+    if ($Group.server) {
+        Write-Verbose "[Get-RDCManGroup] Processing servers of group [$($GroupObj.Name)]..."
+
+        $GroupObj.Servers = foreach ($Server in $Group.server) {
+            Write-Verbose "[Get-RDCManGroup] Processing server [$($Server.properties.name)]"
+
+            [pscustomobject] @{
+                Name = $Server.properties.name
+                DisplayName = $Server.properties.displayName
+            }
+        }
+    }
+
     # If the group contains subgroups, process them
     if ($Group.group) {
         Write-Verbose "[Get-RDCManGroup] Processing [$($Group.group.Count)] subgroups of group [$($GroupObj.Name)]..."
