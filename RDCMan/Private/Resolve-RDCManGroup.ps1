@@ -13,6 +13,20 @@ function Resolve-RDCManGroup {
     }
 
 
+    # If the group contains logon credentials, process them
+    if ($Group.logonCredentials) {
+        Write-Verbose "[Get-RDCManGroup] Processing [$($Group.logonCredentials.Count)] logon credentials of group [$($GroupObj.Name)]..."
+
+        $GroupObj.LogonCredentials = foreach ($LogonCredential in $Group.logonCredentials) {
+            [pscustomobject] @{
+                Inherited = $LogonCredential.inherit
+                Scope = $LogonCredential.profileName.scope
+                UserName = $LogonCredential.profileName.'#text'
+            }
+
+        }
+    }
+
     # If the group contains server entries, process them
     if ($Group.server) {
         Write-Verbose "[Get-RDCManGroup] Processing servers of group [$($GroupObj.Name)]..."
