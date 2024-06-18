@@ -12,6 +12,21 @@ function Resolve-RDCManGroup {
         Name = $Group.properties.name
     }
 
+    # If the group contains credential profiles, process them
+    if ($Group.credentialsProfiles) {
+        Write-Verbose "[Get-RDCManGroup] Processing [$($Group.credentialsProfiles.Count)] credential profiles of group [$($GroupObj.Name)]..."
+
+        $GroupObj.Credentials = foreach ($CredentialProfile in $Group.credentialsProfiles.credentialsProfile) {
+            [pscustomobject] @{
+                ProfileName = $CredentialProfile.profileName.'#text'
+                Inherited = $CredentialProfile.inherit
+                Scope = $CredentialProfile.profileName.scope
+                UserName = $CredentialProfile.userName
+                Password = $CredentialProfile.password
+                Domain = $CredentialProfile.domain
+            }
+        }
+    }
 
     # If the group contains logon credentials, process them
     if ($Group.logonCredentials) {
