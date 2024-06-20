@@ -5,7 +5,7 @@ function Resolve-RDCManGroup {
         $Group,
 
         # Parent group name for recursive calls
-        $ParentGroup
+        $ParentGroupName
     )
 
     Write-Verbose "[Get-RDCManGroup] Processing group [$($Group.properties.name)]..."
@@ -78,7 +78,7 @@ function Resolve-RDCManGroup {
         Write-Verbose "[Get-RDCManGroup] Processing [$($Group.group.Count)] subgroups of group [$($GroupObj.Name)]..."
 
         $GroupObj.Groups = foreach ($SubGroup in $Group.group) {
-            Resolve-RDCManGroup -ParentGroup $GroupObj.FullName -Group $SubGroup
+            Resolve-RDCManGroup -ParentGroupName $GroupObj.FullName -Group $SubGroup
         }
     }
 
