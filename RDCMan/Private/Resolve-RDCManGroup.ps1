@@ -2,14 +2,23 @@ function Resolve-RDCManGroup {
     param (
         # TODO: Validate the parameter type ([xml] was too restrictive)
         [Parameter(Mandatory)]
-        $Group
+        $Group,
+
+        # Parent group name for recursive calls
+        $ParentGroup
     )
 
-    # Build the group object
     Write-Verbose "[Get-RDCManGroup] Processing group [$($Group.properties.name)]..."
 
+    # Build the group object
     $GroupObj = @{
         Name = $Group.properties.name
+    }
+
+    # Build the fully-qualified group name from previous levels
+    if ($PSBoundParameters.ContainsKey('ParentGroup')) {
+        # TODO: Find a (much) more elegant way to prepend a slash to the root group name
+        $GroupObj.FullName = "/$ParentGroup/$($Group.properties.name)" -replace '//', '/'
     }
 
     # If the group contains credential profiles, process them
@@ -49,10 +58,18 @@ function Resolve-RDCManGroup {
         $GroupObj.Servers = foreach ($Server in $Group.server) {
             Write-Verbose "[Get-RDCManGroup] Processing server [$($Server.properties.name)]"
 
-            [pscustomobject] @{
+            $OutputObj = [ordered] @{
+                GroupName = $GroupObj.Name
                 Name = $Server.properties.name
-                DisplayName = $Server.properties.displayName
+                DisplayName = $Server.properties.displayName ?? $Server.properties.name
+                Comment = $Server.properties.comment ?? ''
             }
+
+            # Use display name for the full name of the entry, as name could be just an IP address
+            $OutputObj.FullName = "$($GroupObj.FullName)/$($OutputObj.DisplayName)"
+
+            # Return the server object
+            [pscustomobject] $OutputObj
         }
     }
 
@@ -61,7 +78,7 @@ function Resolve-RDCManGroup {
         Write-Verbose "[Get-RDCManGroup] Processing [$($Group.group.Count)] subgroups of group [$($GroupObj.Name)]..."
 
         $GroupObj.Groups = foreach ($SubGroup in $Group.group) {
-            Resolve-RDCManGroup -Group $SubGroup
+            Resolve-RDCManGroup -ParentGroup $GroupObj.FullName -Group $SubGroup
         }
     }
 
