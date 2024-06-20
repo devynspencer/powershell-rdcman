@@ -1,10 +1,16 @@
 function Resolve-RDCManGroup {
     param (
         # TODO: Validate the parameter type ([xml] was too restrictive)
+        # The XML object representing the group (or subgroup) to process, for example:
+        #   $Config = [xml] (Get-Content -Path config.rdg)
+        #   Resolve-RDCManGroup -Group $Config.file.group
         [Parameter(Mandatory)]
         $Group,
 
-        # Parent group name for recursive calls
+        # Parent group name for recursive calls. This should be the "full" name of the Parent
+        # group, for example: "/example.com/Application Servers/Application Name". Specifying the
+        # parent group is useful in recursive calls to subgroups, building a fully-qualified group
+        # name to each server object.
         $ParentGroupName
     )
 
