@@ -83,11 +83,12 @@ function Resolve-RDCManGroup {
     if ($Group.group) {
         Write-Verbose "[Get-RDCManGroup] Processing [$($Group.group.Count)] subgroups of group [$($GroupObj.Name)]..."
 
+        # Recursively process each subgroup
         $GroupObj.Groups = foreach ($SubGroup in $Group.group) {
             Resolve-RDCManGroup -ParentGroupName $GroupObj.FullName -Group $SubGroup
         }
     }
 
-    # Return the group object
+    # Return the entire configuration object
     [pscustomobject] $GroupObj
 }
