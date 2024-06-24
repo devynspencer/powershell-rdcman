@@ -22,10 +22,7 @@ function Resolve-RDCManGroup {
     }
 
     # Build the fully-qualified group name from previous levels
-    if ($PSBoundParameters.ContainsKey('ParentGroup')) {
-        # TODO: Find a (much) more elegant way to prepend a slash to the root group name
-        $GroupObj.FullName = "/$ParentGroup/$($Group.properties.name)" -replace '//', '/'
-    }
+    $GroupObj.FullName = "$ParentGroupName/$($Group.properties.name)" -replace '//', '/'
 
     # If the group contains credential profiles, process them
     if ($Group.credentialsProfiles) {
