@@ -23,6 +23,7 @@ function Resolve-RDCManGroup {
     # Build the group object
     $GroupObj = @{
         Name = $Group.properties.name
+        Groups = @()
     }
 
     # Build the fully-qualified group name from previous levels
