@@ -11,7 +11,7 @@ function Resolve-RDCManGroup {
         # group, for example: "/example.com/Application Servers/Application Name". Specifying the
         # parent group is useful in recursive calls to subgroups, building a fully-qualified group
         # name to each server object.
-        $ParentGroupName
+        $ParentGroupName = '/'
     )
 
     Write-Verbose "[Get-RDCManGroup] Processing group [$($Group.properties.name)]..."
