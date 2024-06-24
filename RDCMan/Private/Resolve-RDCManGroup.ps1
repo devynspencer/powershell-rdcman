@@ -7,6 +7,10 @@ function Resolve-RDCManGroup {
         [Parameter(Mandatory)]
         $Group,
 
+        # Include only server objects in the output
+        [switch]
+        $Flatten,
+
         # Parent group name for recursive calls. This should be the "full" name of the Parent
         # group, for example: "/example.com/Application Servers/Application Name". Specifying the
         # parent group is useful in recursive calls to subgroups, building a fully-qualified group
@@ -57,9 +61,10 @@ function Resolve-RDCManGroup {
     if ($Group.server) {
         Write-Verbose "[Get-RDCManGroup] Processing servers of group [$($GroupObj.Name)]..."
 
-        $GroupObj.Servers = foreach ($Server in $Group.server) {
+        $ChildServers = foreach ($Server in $Group.server) {
             Write-Verbose "[Get-RDCManGroup] Processing server [$($Server.properties.name)]"
 
+            # Build the output object based on available properties
             $OutputObj = [ordered] @{
                 GroupName = $GroupObj.Name
                 Name = $Server.properties.name
@@ -73,18 +78,48 @@ function Resolve-RDCManGroup {
             # Return the server object
             [pscustomobject] $OutputObj
         }
+
+        # Return the servers as a flat list or as a property of the group object, depending on the Flatten switch
+        if ($Flatten) {
+            $ChildServers
+        }
+
+        else {
+            $GroupObj.Servers = $ChildServers
+        }
     }
 
     # If the group contains subgroups, process them
     if ($Group.group) {
         Write-Verbose "[Get-RDCManGroup] Processing [$($Group.group.Count)] subgroups of group [$($GroupObj.Name)]..."
 
+        # Ensure optional parameters are passed down to recursive calls
+        $ResolveParams = @{
+            ParentGroupName = $GroupObj.FullName
+        }
+
+        if ($Flatten) {
+            $ResolveParams.Flat = $true
+        }
+
         # Recursively process each subgroup
-        $GroupObj.Groups = foreach ($SubGroup in $Group.group) {
-            Resolve-RDCManGroup -ParentGroupName $GroupObj.FullName -Group $SubGroup
+        foreach ($SubGroup in $Group.group) {
+            $OutputObj = Resolve-RDCManGroup @ResolveParams -Group $SubGroup
+
+            # Return the subgroup object (containing servers) if Flatten specified
+            if ($Flatten) {
+                $OutputObj
+            }
+
+            # Otherwise add the subgroup to the parent object
+            else {
+                $GroupObj.Groups += $OutputObj
+            }
         }
     }
 
     # Return the entire configuration object
-    [pscustomobject] $GroupObj
+    if (!$Flatten) {
+        [pscustomobject] $GroupObj
+    }
 }
