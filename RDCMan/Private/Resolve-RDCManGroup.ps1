@@ -53,7 +53,6 @@ function Resolve-RDCManGroup {
                 Scope = $LogonCredential.profileName.scope
                 UserName = $LogonCredential.profileName.'#text'
             }
-
         }
     }
 
